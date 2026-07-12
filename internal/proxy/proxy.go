@@ -236,6 +236,11 @@ func (p *Proxy) handleToolCall(w *bufio.Writer, req *JSONRPCRequest, scanner *bu
 		outputStr = string(errBytes)
 	}
 
+	if len(p.config.RedactPatterns) > 0 {
+		inputStr = store.Redact(inputStr, p.config.RedactPatterns)
+		outputStr = store.Redact(outputStr, p.config.RedactPatterns)
+	}
+
 	store.InsertToolCall(p.db, &store.ToolCall{
 		SessionID:     p.sessionID,
 		ToolName:      params.Name,
@@ -316,10 +321,14 @@ func (p *Proxy) isHidden(name string) bool {
 }
 
 func (p *Proxy) getTraceTools() []ToolDef {
+	rawNote := ""
+	if !p.config.RawPayload {
+		rawNote = " Returns metadata only (tool name, hash, duration, error) by default. Set OBSERVER_RAW_PAYLOAD=1 to include raw input/output."
+	}
 	tools := []ToolDef{
 		{
 			Name:        "trace.history",
-			Description: "List recent tool calls. Returns the last N tool calls with input, output, duration, and timestamp. Pass limit (default 10) and optional session_id.",
+			Description: "List recent tool calls. Returns the last N tool calls with metadata, duration, and timestamp." + rawNote + " Pass limit (default 10) and optional session_id.",
 			InputSchema: json.RawMessage(`{"type":"object","properties":{"limit":{"type":"integer","description":"Number of recent calls to return (default 10, max 100)"},"session_id":{"type":"string","description":"Filter by session ID"}}}`),
 		},
 		{
@@ -329,12 +338,12 @@ func (p *Proxy) getTraceTools() []ToolDef {
 		},
 		{
 			Name:        "trace.search",
-			Description: "Search through tool call history by tool name, input, or output content. Returns matching tool calls.",
+			Description: "Search through tool call history by tool name, input, or output content. Returns matching tool calls." + rawNote + " Pass query and optional limit/session_id.",
 			InputSchema: json.RawMessage(`{"type":"object","properties":{"query":{"type":"string","description":"Search query"},"limit":{"type":"integer","description":"Max results (default 20)"},"session_id":{"type":"string","description":"Filter by session ID"}},"required":["query"]}`),
 		},
 		{
 			Name:        "trace.replay",
-			Description: "Replay a previous tool call by its ID. Returns the original input and output for comparison.",
+			Description: "Replay a previous tool call by its ID. Returns the original input and output for comparison." + rawNote,
 			InputSchema: json.RawMessage(`{"type":"object","properties":{"call_id":{"type":"integer","description":"The ID of the tool call to replay"}},"required":["call_id"]}`),
 		},
 	}
@@ -375,7 +384,12 @@ func (p *Proxy) traceHistory(w *bufio.Writer, req *JSONRPCRequest, args json.Raw
 		return
 	}
 
-	content := store.FormatJSON(calls)
+	var content string
+	if p.config.RawPayload {
+		content = store.FormatJSON(calls)
+	} else {
+		content = store.FormatJSON(store.ToMetaList(calls))
+	}
 	writeToolResult(w, req.ID, content)
 }
 
@@ -412,7 +426,12 @@ func (p *Proxy) traceSearch(w *bufio.Writer, req *JSONRPCRequest, args json.RawM
 		return
 	}
 
-	content := store.FormatJSON(calls)
+	var content string
+	if p.config.RawPayload {
+		content = store.FormatJSON(calls)
+	} else {
+		content = store.FormatJSON(store.ToMetaList(calls))
+	}
 	writeToolResult(w, req.ID, content)
 }
 
@@ -428,7 +447,12 @@ func (p *Proxy) traceReplay(w *bufio.Writer, req *JSONRPCRequest, args json.RawM
 		return
 	}
 
-	content := store.FormatJSON(call)
+	var content string
+	if p.config.RawPayload {
+		content = store.FormatJSON(call)
+	} else {
+		content = store.FormatJSON(store.ToMeta(*call))
+	}
 	writeToolResult(w, req.ID, content)
 }
 
