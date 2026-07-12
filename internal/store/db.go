@@ -19,15 +19,22 @@ func Open(path string) (*sql.DB, error) {
 	}
 
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return nil, fmt.Errorf("create db dir: %w", err)
 	}
 
-	db, err := sql.Open("sqlite3", path+"?_journal_mode=WAL&_busy_timeout=5000")
+	db, err := sql.Open("sqlite3", path+"?_journal_mode=WAL&_busy_timeout=5000&_mode=0600")
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
 	}
 	db.SetMaxOpenConns(1)
+
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("ping db: %w", err)
+	}
+
+	os.Chmod(path, 0600)
+
 	return db, nil
 }
 
@@ -39,6 +46,8 @@ func Migrate(db *sql.DB) error {
 		tool_name TEXT NOT NULL,
 		input TEXT,
 		output TEXT,
+		input_hash TEXT,
+		output_hash TEXT,
 		is_error INTEGER DEFAULT 0,
 		duration_ms INTEGER DEFAULT 0,
 		token_estimate INTEGER DEFAULT 0,
