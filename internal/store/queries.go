@@ -1,9 +1,12 @@
 package store
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -11,12 +14,39 @@ type ToolCall struct {
 	ID            int64  `json:"id"`
 	SessionID     string `json:"session_id"`
 	ToolName      string `json:"tool_name"`
-	Input         string `json:"input"`
-	Output        string `json:"output"`
+	Input         string `json:"input,omitempty"`
+	Output        string `json:"output,omitempty"`
+	InputHash     string `json:"input_hash"`
+	OutputHash    string `json:"output_hash"`
 	IsError       bool   `json:"is_error"`
 	DurationMs    int64  `json:"duration_ms"`
 	TokenEstimate int    `json:"token_estimate"`
 	CreatedAt     string `json:"created_at"`
+}
+
+type ToolCallMeta struct {
+	ID            int64  `json:"id"`
+	SessionID     string `json:"session_id"`
+	ToolName      string `json:"tool_name"`
+	InputHash     string `json:"input_hash"`
+	OutputHash    string `json:"output_hash"`
+	IsError       bool   `json:"is_error"`
+	DurationMs    int64  `json:"duration_ms"`
+	TokenEstimate int    `json:"token_estimate"`
+	CreatedAt     string `json:"created_at"`
+}
+
+func HashString(s string) string {
+	h := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(h[:16])
+}
+
+func Redact(text string, patterns []string) string {
+	out := text
+	for _, p := range patterns {
+		out = strings.ReplaceAll(out, p, "[REDACTED]")
+	}
+	return out
 }
 
 type Session struct {
@@ -38,9 +68,12 @@ type ToolInfo struct {
 }
 
 func InsertToolCall(db *sql.DB, call *ToolCall) error {
+	call.InputHash = HashString(call.Input)
+	call.OutputHash = HashString(call.Output)
+
 	_, err := db.Exec(
-		`INSERT INTO tool_calls (session_id, tool_name, input, output, is_error, duration_ms, token_estimate) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		call.SessionID, call.ToolName, call.Input, call.Output, call.IsError, call.DurationMs, call.TokenEstimate,
+		`INSERT INTO tool_calls (session_id, tool_name, input, output, input_hash, output_hash, is_error, duration_ms, token_estimate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		call.SessionID, call.ToolName, call.Input, call.Output, call.InputHash, call.OutputHash, call.IsError, call.DurationMs, call.TokenEstimate,
 	)
 	if err != nil {
 		return fmt.Errorf("insert tool call: %w", err)
@@ -59,13 +92,13 @@ func GetRecentCalls(db *sql.DB, limit int, sessionID string) ([]ToolCall, error)
 
 	if sessionID != "" {
 		rows, err = db.Query(
-			`SELECT id, session_id, tool_name, input, output, is_error, duration_ms, token_estimate, created_at
+			`SELECT id, session_id, tool_name, input, output, input_hash, output_hash, is_error, duration_ms, token_estimate, created_at
 			FROM tool_calls WHERE session_id = ? ORDER BY created_at DESC LIMIT ?`,
 			sessionID, limit,
 		)
 	} else {
 		rows, err = db.Query(
-			`SELECT id, session_id, tool_name, input, output, is_error, duration_ms, token_estimate, created_at
+			`SELECT id, session_id, tool_name, input, output, input_hash, output_hash, is_error, duration_ms, token_estimate, created_at
 			FROM tool_calls ORDER BY created_at DESC LIMIT ?`,
 			limit,
 		)
@@ -85,14 +118,14 @@ func SearchCalls(db *sql.DB, query, sessionID string, limit int) ([]ToolCall, er
 
 	if sessionID != "" {
 		rows, err = db.Query(
-			`SELECT id, session_id, tool_name, input, output, is_error, duration_ms, token_estimate, created_at
+			`SELECT id, session_id, tool_name, input, output, input_hash, output_hash, is_error, duration_ms, token_estimate, created_at
 			FROM tool_calls WHERE session_id = ? AND (tool_name LIKE ? OR input LIKE ? OR output LIKE ?)
 			ORDER BY created_at DESC LIMIT ?`,
 			sessionID, pattern, pattern, pattern, limit,
 		)
 	} else {
 		rows, err = db.Query(
-			`SELECT id, session_id, tool_name, input, output, is_error, duration_ms, token_estimate, created_at
+			`SELECT id, session_id, tool_name, input, output, input_hash, output_hash, is_error, duration_ms, token_estimate, created_at
 			FROM tool_calls WHERE tool_name LIKE ? OR input LIKE ? OR output LIKE ?
 			ORDER BY created_at DESC LIMIT ?`,
 			pattern, pattern, pattern, limit,
@@ -108,13 +141,13 @@ func SearchCalls(db *sql.DB, query, sessionID string, limit int) ([]ToolCall, er
 
 func GetCallByID(db *sql.DB, id int64) (*ToolCall, error) {
 	row := db.QueryRow(
-		`SELECT id, session_id, tool_name, input, output, is_error, duration_ms, token_estimate, created_at
+		`SELECT id, session_id, tool_name, input, output, input_hash, output_hash, is_error, duration_ms, token_estimate, created_at
 		FROM tool_calls WHERE id = ?`,
 		id,
 	)
 	var c ToolCall
 	var isErr int
-	err := row.Scan(&c.ID, &c.SessionID, &c.ToolName, &c.Input, &c.Output, &isErr, &c.DurationMs, &c.TokenEstimate, &c.CreatedAt)
+	err := row.Scan(&c.ID, &c.SessionID, &c.ToolName, &c.Input, &c.Output, &c.InputHash, &c.OutputHash, &isErr, &c.DurationMs, &c.TokenEstimate, &c.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -271,13 +304,35 @@ func scanToolCalls(rows *sql.Rows) ([]ToolCall, error) {
 	for rows.Next() {
 		var c ToolCall
 		var isErr int
-		if err := rows.Scan(&c.ID, &c.SessionID, &c.ToolName, &c.Input, &c.Output, &isErr, &c.DurationMs, &c.TokenEstimate, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.SessionID, &c.ToolName, &c.Input, &c.Output, &c.InputHash, &c.OutputHash, &isErr, &c.DurationMs, &c.TokenEstimate, &c.CreatedAt); err != nil {
 			return nil, err
 		}
 		c.IsError = isErr == 1
 		calls = append(calls, c)
 	}
 	return calls, rows.Err()
+}
+
+func ToMeta(c ToolCall) ToolCallMeta {
+	return ToolCallMeta{
+		ID:            c.ID,
+		SessionID:     c.SessionID,
+		ToolName:      c.ToolName,
+		InputHash:     c.InputHash,
+		OutputHash:    c.OutputHash,
+		IsError:       c.IsError,
+		DurationMs:    c.DurationMs,
+		TokenEstimate: c.TokenEstimate,
+		CreatedAt:     c.CreatedAt,
+	}
+}
+
+func ToMetaList(calls []ToolCall) []ToolCallMeta {
+	result := make([]ToolCallMeta, len(calls))
+	for i, c := range calls {
+		result[i] = ToMeta(c)
+	}
+	return result
 }
 
 func EstimateTokens(text string) int {
