@@ -328,7 +328,7 @@ func (p *Proxy) getTraceTools() []ToolDef {
 	tools := []ToolDef{
 		{
 			Name:        "trace.history",
-			Description: "List recent tool calls. Returns the last N tool calls with metadata, duration, and timestamp." + rawNote + " Pass limit (default 10) and optional session_id.",
+			Description: "List recent tool calls for the current session. Returns metadata, duration, and timestamp." + rawNote + " Pass limit (default 10) and optional session_id to query a different session.",
 			InputSchema: json.RawMessage(`{"type":"object","properties":{"limit":{"type":"integer","description":"Number of recent calls to return (default 10, max 100)"},"session_id":{"type":"string","description":"Filter by session ID"}}}`),
 		},
 		{
@@ -338,7 +338,7 @@ func (p *Proxy) getTraceTools() []ToolDef {
 		},
 		{
 			Name:        "trace.search",
-			Description: "Search through tool call history by tool name, input, or output content. Returns matching tool calls." + rawNote + " Pass query and optional limit/session_id.",
+			Description: "Search through tool call history for the current session by tool name, input, or output content. Returns matching tool calls." + rawNote + " Pass query and optional limit/session_id.",
 			InputSchema: json.RawMessage(`{"type":"object","properties":{"query":{"type":"string","description":"Search query"},"limit":{"type":"integer","description":"Max results (default 20)"},"session_id":{"type":"string","description":"Filter by session ID"}},"required":["query"]}`),
 		},
 		{
@@ -378,7 +378,12 @@ func (p *Proxy) traceHistory(w *bufio.Writer, req *JSONRPCRequest, args json.Raw
 		params.Limit = 100
 	}
 
-	calls, err := store.GetRecentCalls(p.db, params.Limit, params.SessionID)
+	sessionID := params.SessionID
+	if sessionID == "" {
+		sessionID = p.sessionID
+	}
+
+	calls, err := store.GetRecentCalls(p.db, params.Limit, sessionID)
 	if err != nil {
 		writeError(w, req.ID, -32603, fmt.Sprintf("query error: %v", err))
 		return
@@ -399,7 +404,12 @@ func (p *Proxy) traceStats(w *bufio.Writer, req *JSONRPCRequest, args json.RawMe
 	}
 	json.Unmarshal(args, &params)
 
-	stats, err := store.GetStats(p.db, params.SessionID)
+	sessionID := params.SessionID
+	if sessionID == "" {
+		sessionID = p.sessionID
+	}
+
+	stats, err := store.GetStats(p.db, sessionID)
 	if err != nil {
 		writeError(w, req.ID, -32603, fmt.Sprintf("stats error: %v", err))
 		return
@@ -420,7 +430,12 @@ func (p *Proxy) traceSearch(w *bufio.Writer, req *JSONRPCRequest, args json.RawM
 		params.Limit = 20
 	}
 
-	calls, err := store.SearchCalls(p.db, params.Query, params.SessionID, params.Limit)
+	sessionID := params.SessionID
+	if sessionID == "" {
+		sessionID = p.sessionID
+	}
+
+	calls, err := store.SearchCalls(p.db, params.Query, sessionID, params.Limit)
 	if err != nil {
 		writeError(w, req.ID, -32603, fmt.Sprintf("search error: %v", err))
 		return
