@@ -7,11 +7,13 @@ import (
 )
 
 type Config struct {
-	Target    string
-	DBPath    string
-	LogLevel  string
-	MaxTools  int
-	Filter    []string
+	Target        string
+	DBPath        string
+	LogLevel      string
+	MaxTools      int
+	Filter        []string
+	RawPayload    bool
+	RedactPatterns []string
 }
 
 func LoadConfig() *Config {
@@ -30,6 +32,17 @@ func LoadConfig() *Config {
 		c.Filter = strings.Split(v, ",")
 		for i, f := range c.Filter {
 			c.Filter[i] = strings.TrimSpace(f)
+		}
+	}
+
+	if v := os.Getenv("OBSERVER_RAW_PAYLOAD"); v == "1" || v == "true" {
+		c.RawPayload = true
+	}
+
+	if v := os.Getenv("OBSERVER_REDACT_PATTERNS"); v != "" {
+		c.RedactPatterns = strings.Split(v, ",")
+		for i, p := range c.RedactPatterns {
+			c.RedactPatterns[i] = strings.TrimSpace(p)
 		}
 	}
 
