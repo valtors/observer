@@ -61,6 +61,8 @@ All configuration is via environment variables:
 | `OBSERVER_LOG_LEVEL` | Log level: debug, info, warn, error | `info` |
 | `OBSERVER_MAX_TOOLS` | Max tools to expose to client (0 = all) | `0` |
 | `OBSERVER_FILTER` | Comma-separated tool names to hide | - |
+| `OBSERVER_RAW_PAYLOAD` | Set to 1 to include raw input/output in trace responses | `0` |
+| `OBSERVER_REDACT_PATTERNS` | Comma-separated patterns to redact before storing | - |
 
 ## How It Works
 
@@ -85,13 +87,17 @@ Observer speaks the MCP protocol on both sides. It intercepts `initialize`, `too
 
 Observer injects 4 extra tools into the `tools/list` response. These are handled locally and never forwarded to the upstream server.
 
+By default, trace tools return **metadata only** (tool name, timestamp, duration, error status, SHA-256 hash of input/output). This prevents secrets or prompt injection from old tool results from leaking back into the model's context. Set `OBSERVER_RAW_PAYLOAD=1` to include raw input/output in trace responses.
+
+Trace tools are **session-scoped by default** - they only return calls from the current Observer session. Pass an explicit `session_id` to query a different session.
+
 ### trace.history
 
 ```json
 {"name": "trace.history", "arguments": {"limit": 10}}
 ```
 
-Returns the last N tool calls with input, output, duration, and timestamp.
+Returns the last N tool calls for the current session with metadata, duration, and timestamp.
 
 ### trace.stats
 
@@ -99,7 +105,7 @@ Returns the last N tool calls with input, output, duration, and timestamp.
 {"name": "trace.stats", "arguments": {}}
 ```
 
-Returns total calls, unique tools, error count, average duration, and per-tool breakdown.
+Returns total calls, unique tools, error count, average duration, and per-tool breakdown for the current session.
 
 ### trace.search
 
@@ -107,7 +113,7 @@ Returns total calls, unique tools, error count, average duration, and per-tool b
 {"name": "trace.search", "arguments": {"query": "filesystem", "limit": 20}}
 ```
 
-Search through tool call history by tool name, input, or output content.
+Search through tool call history for the current session by tool name, input, or output content.
 
 ### trace.replay
 
