@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -53,8 +54,32 @@ func main() {
 		log.Fatalf("failed to create proxy: %v", err)
 	}
 
+	if config.ListenAddr != "" {
+		runSSE(ctx, p, config.ListenAddr)
+		return
+	}
+
 	if err := p.Run(ctx); err != nil {
 		log.Fatalf("proxy error: %v", err)
+	}
+}
+
+func runSSE(ctx context.Context, p *proxy.Proxy, addr string) {
+	sse := proxy.NewSSEServer(p)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/sse", sse.HandleSSE)
+	mux.HandleFunc("/message", sse.HandleMessage)
+
+	srv := &http.Server{Addr: addr, Handler: mux}
+
+	go func() {
+		<-ctx.Done()
+		srv.Shutdown(context.Background())
+	}()
+
+	log.Printf("observer SSE listening on %s (endpoints: /sse, /message)", addr)
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("SSE server error: %v", err)
 	}
 }
 
@@ -63,6 +88,7 @@ func printHelp() {
 
 Usage:
   observer                    Start the proxy server (stdio transport)
+  OBSERVER_LISTEN_ADDR=:8080  Start with SSE transport (HTTP)
   observer --version           Print version
   observer --help              Show this help
 
