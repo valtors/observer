@@ -194,7 +194,11 @@ func (p *Proxy) handleToolsList(w *bufio.Writer, req *JSONRPCRequest) {
 	}
 
 	traceTools := p.getTraceTools()
-	filtered = append(filtered, traceTools...)
+	for _, t := range traceTools {
+		if !p.isHidden(t.Name) {
+			filtered = append(filtered, t)
+		}
+	}
 
 	if p.config.MaxTools > 0 && len(filtered) > p.config.MaxTools {
 		filtered = filtered[:p.config.MaxTools]
