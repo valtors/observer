@@ -77,38 +77,37 @@ func runSSE(ctx context.Context, p *proxy.Proxy, addr string) {
 		srv.Shutdown(context.Background())
 	}()
 
-	log.Printf("observer SSE listening on %s (endpoints: /sse, /message)", addr)
+	log.Printf("observer SSE on %s (/sse, /message)", addr)
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("SSE server error: %v", err)
 	}
 }
 
 func printHelp() {
-	fmt.Println(`observer - transparent MCP proxy for agent observability
+	fmt.Println(`observer - transparent MCP proxy
 
-Usage:
-  observer                    Start the proxy server (stdio transport)
-  OBSERVER_LISTEN_ADDR=:8080  Start with SSE transport (HTTP)
-  observer --version           Print version
-  observer --help              Show this help
+it watches what your agent does. every tool call, every argument, every response.
+logged to sqlite. you can search it later. you can replay it later.
 
-Configuration (environment variables):
-  OBSERVER_TARGET             Command to run the upstream MCP server
-                              Example: "npx -y @modelcontextprotocol/server-filesystem /tmp"
-  OBSERVER_DB_PATH            SQLite database path (default: ~/.observer/trace.db)
-  OBSERVER_LOG_LEVEL          Log level: debug, info, warn, error (default: info)
-  OBSERVER_MAX_TOOLS          Max tools to expose to client (0 = all, default: 0)
-  OBSERVER_FILTER             Comma-separated tool names to hide from client
+usage:
+  observer                    start the proxy (stdio)
+  OBSERVER_LISTEN_ADDR=:8080  start with SSE transport (http)
+  observer --version           print version
+  observer --help              this
 
-How it works:
-  Observer sits between your MCP client (Claude, Cline, Goose, etc.)
-  and the actual MCP server. It logs every tool call to SQLite and
-  exposes trace history through additional MCP tools:
-    - trace.history   List recent tool calls
-    - trace.stats     Get usage statistics
-    - trace.replay    Replay a previous tool call
-    - trace.search    Search through tool call history
+environment:
+  OBSERVER_TARGET             command to run the upstream MCP server
+  OBSERVER_DB_PATH            sqlite database path (default: ~/.observer/trace.db)
+  OBSERVER_LOG_LEVEL          debug, info, warn, error (default: info)
+  OBSERVER_MAX_TOOLS          max tools to expose to client (0 = all)
+  OBSERVER_FILTER             comma-separated tool names to hide from client
 
-Example:
+trace tools (injected into your agent's tool list):
+  trace.history   recent tool calls
+  trace.stats     usage statistics
+  trace.replay    replay a previous tool call
+  trace.search    search through call history
+
+example:
   OBSERVER_TARGET="npx -y @modelcontextprotocol/server-filesystem /tmp" observer`)
 }
