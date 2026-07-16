@@ -14,6 +14,7 @@ type Config struct {
 	Filter        []string
 	RawPayload    bool
 	RedactPatterns []string
+	ListenAddr     string
 }
 
 func LoadConfig() *Config {
@@ -44,6 +45,10 @@ func LoadConfig() *Config {
 		for i, p := range c.RedactPatterns {
 			c.RedactPatterns[i] = strings.TrimSpace(p)
 		}
+	}
+
+	if v := os.Getenv("OBSERVER_LISTEN_ADDR"); v != "" {
+		c.ListenAddr = v
 	}
 
 	if c.LogLevel == "" {
