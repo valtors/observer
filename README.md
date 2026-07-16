@@ -1,27 +1,28 @@
 # Observer
 
-Transparent MCP proxy for agent observability.
+Your agent makes 30 tool calls. You see the final text response. Do you know which tools were called? What arguments were passed? Which calls failed? How long they took? You don't.
 
-Observer sits between your MCP client (Claude Desktop, Cline, Goose, Codex, etc.) and the actual MCP server. It logs every tool call to SQLite and exposes trace history through additional MCP tools, so you can see exactly what your agent is doing.
+Observer fixes this. It sits between your MCP client (Claude Desktop, Cline, Goose, Codex, whatever) and the actual MCP server. It logs every tool call to SQLite. Then it exposes trace tools so your agent can query its own call history.
 
 ## Why
 
-Across 1665 discussions in 8 major AI agent communities (MCP, Codex, Cline, Goose, Anthropic SDK, OpenAI Python), the #1 recurring problem is agent observability. Nobody can see what their agent is actually doing. There is no standard way to trace agent actions, tool calls, or decisions.
+1665 discussions across 8 agent communities. The #1 problem: nobody can see what their agent is doing. People debug agent behavior with console.log. In 2026.
 
 Observer fixes this.
 
 ## Features
 
-- **Transparent proxy** - Drop-in replacement for any MCP server. Your client does not know it is talking to a proxy.
-- **Tool call logging** - Every tool call is logged with input, output, duration, error status, and token estimate.
-- **Trace tools** - Exposes 4 additional MCP tools for querying history:
-  - `trace.history` - List recent tool calls
-  - `trace.stats` - Usage statistics with per-tool breakdown
-  - `trace.search` - Search through tool call history
-  - `trace.replay` - Replay a previous tool call by ID
-- **Tool filtering** - Hide tools from the client to reduce token overhead (addresses tool bloat, the #2 problem found in the same research).
-- **SQLite storage** - All data stored locally in SQLite. No external dependencies.
-- **Zero config** - One binary, one env var to point at your upstream server.
+- **Transparent proxy** - Drop-in replacement for any MCP server. Your client doesn't know it's talking to a proxy.
+- **Tool call logging** - Every call logged. Input. Output. Duration. Error. Token estimate. All of it.
+- **Trace tools** - 4 MCP tools injected into your agent's tool list:
+  - `trace.history` - recent tool calls
+  - `trace.stats` - usage statistics, per-tool breakdown
+  - `trace.search` - search through call history
+  - `trace.replay` - replay a previous tool call by ID
+- **Tool filtering** - Hide tools from the client. Less tokens, less confusion. Set OBSERVER_FILTER and they're gone.
+- **SSE transport** - Run Observer as an HTTP server with /sse and /message endpoints. For remote setups.
+- **SQLite storage** - All data local. No external dependencies. Your data doesn't leave your machine.
+- **Zero config** - One binary. One env var. That's it.
 
 ## Quick Start
 
