@@ -87,21 +87,21 @@ func (p *Proxy) handleHTTPMessage(req *JSONRPCRequest) *JSONRPCResponse {
 			ID:         p.sessionID,
 			ServerName: "observer",
 		})
-		return &resp
+		return resp
 	case "tools/list":
 		return p.handleToolsListHTTP(req)
 	case "tools/call":
 		return p.handleToolCallHTTP(req)
 	default:
 		resp := p.sendToTarget(req)
-		return &resp
+		return resp
 	}
 }
 
 func (p *Proxy) handleToolsListHTTP(req *JSONRPCRequest) *JSONRPCResponse {
 	resp := p.sendToTarget(req)
 	if resp.Error != nil {
-		return &resp
+		return resp
 	}
 
 	var result struct {
@@ -164,7 +164,7 @@ func (p *Proxy) handleToolCallHTTP(req *JSONRPCRequest) *JSONRPCResponse {
 	}
 
 	resp := p.sendToTarget(req)
-	return &resp
+	return resp
 }
 
 func (p *Proxy) handleTraceToolHTTP(req *JSONRPCRequest, name string, args json.RawMessage) *JSONRPCResponse {
