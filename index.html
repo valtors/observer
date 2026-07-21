@@ -2,56 +2,63 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>observer</title>
-<meta name="description" content="your agent is making calls you can't see. observer fixes that.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { font-family: 'Archivo', sans-serif; background: #0a0a0a; color: #e5e5e5; line-height: 1.7; max-width: 680px; margin: 0 auto; padding: 0 24px; -webkit-font-smoothing: antialiased; }
-.nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #1a1a1a; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #0a0a0a; color: #e5e5e5; line-height: 1.7; max-width: 680px; margin: 0 auto; padding: 0 24px; -webkit-font-smoothing: antialiased; overflow-x: hidden; position: relative; }
+.prism-grid { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto; z-index: 0; overflow: hidden; }
+.prism-grid .grid-plane { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; }
+.prism-grid .grid-row { display: flex; }
+.prism-grid .grid-cell { border: 1px solid rgba(255,255,255,0.05); box-sizing: border-box; }
+.prism-grid .lit-cell { position: absolute; pointer-events: none; border-radius: 2px; transition: opacity 1.2s ease-out, transform 1.2s ease-out; }
+.click-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; overflow: visible; }
+.nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #1a1a1a; position: relative; z-index: 5; }
 .nav-links { display: flex; gap: 20px; }
 .nav-links a { color: #888; text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
 .nav-links a:hover { color: #e5e5e5; }
 .brand { color: #e5e5e5; font-weight: 600; text-decoration: none; font-size: 0.95rem; }
-.hero { padding: 80px 0 60px; }
+.hero { padding: 80px 0 60px; position: relative; z-index: 5; }
+.orb-hero-wrap { display: flex; justify-content: center; margin-bottom: 32px; height: 140px; position: relative; }
+.orb-hero-wrap canvas { filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.15)); }
+.orb-hero-wrap .orb-glow { position: absolute; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%); pointer-events: none; animation: pulse-glow 3s ease-in-out infinite; }
+@keyframes pulse-glow { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 0.8; } }
 .hero h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 20px; }
 .hero p { color: #999; font-size: 1.1rem; margin-bottom: 30px; max-width: 520px; }
-.code-block { background: #111; border: 1px solid #1a1a1a; border-radius: 8px; padding: 16px 20px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; overflow-x: auto; }
+.code-block { background: #111; border: 1px solid #1a1a1a; border-radius: 8px; padding: 16px 20px; margin: 20px 0; font-family: 'SF Mono', Monaco, monospace; font-size: 0.85rem; overflow-x: auto; box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
 .code-block .comment { color: #555; }
-.install-cmd { color: #e5e5e5; }
-section { padding: 40px 0; }
+.install-cmd { color: #a855f7; }
+section { padding: 40px 0; position: relative; z-index: 5; }
 section h2 { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 16px; }
 section h3 { font-size: 1rem; font-weight: 600; margin: 24px 0 8px; color: #e5e5e5; }
 section p { color: #999; margin-bottom: 12px; }
-.cta { padding: 60px 0; border-top: 1px solid #1a1a1a; }
+.cta { padding: 60px 0; border-top: 1px solid #1a1a1a; position: relative; z-index: 5; }
 .cta p { color: #999; margin-bottom: 20px; }
 .links { display: flex; gap: 16px; flex-wrap: wrap; }
-.links a { color: #888; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #333; padding-bottom: 2px; transition: color 0.2s; }
+.links a { color: #a855f7; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #2a1a3a; padding-bottom: 2px; transition: color 0.2s; }
 .links a:hover { color: #e5e5e5; }
-.footer { padding: 30px 0; border-top: 1px solid #1a1a1a; }
+.footer { padding: 30px 0; border-top: 1px solid #1a1a1a; position: relative; z-index: 5; }
 .footer p { color: #555; font-size: 0.8rem; }
-@media (max-width: 640px) {
-  .hero h1 { font-size: 1.8rem; }
-  .nav-links { gap: 14px; }
-  .nav-links a { font-size: 0.75rem; }
-}
+@media (max-width: 640px) { .hero h1 { font-size: 1.8rem; } .nav-links { gap: 14px; } }
 </style>
 </head>
 <body>
-
+<div class="prism-grid" id="prismGrid"></div>
+<div class="click-fx" id="clickFx"></div>
 <nav class="nav">
-  <a href="/" class="brand">valtors</a>
+  <a href="https://valtors.github.io" class="brand">valtors</a>
   <div class="nav-links">
     <a href="https://valtors.github.io/valtors-landing/mcp-security-leaderboard.html">leaderboard</a>
     <a href="https://github.com/valtors/observer">github</a>
   </div>
 </nav>
-
 <div class="hero">
+  <div class="orb-hero-wrap">
+    <div class="orb-glow"></div>
+    <canvas id="heroOrb" width="140" height="140"></canvas>
+  </div>
   <h1>your agent is making calls you can't see.</h1>
   <p>you connected an MCP server to your LLM. the agent calls tools. you don't know which ones, what arguments it passed, or what came back. observer sits in the middle. it logs everything. now you can see.</p>
   <div class="code-block">
@@ -61,55 +68,32 @@ section p { color: #999; margin-bottom: 12px; }
 <span class="install-cmd">go install github.com/valtors/observer@latest</span>
   </div>
 </div>
-
 <section>
   <h2>what it does</h2>
   <p>observer is a transparent MCP proxy. it sits between your agent and your MCP servers. every tool call, every response, every error passes through it. it stores everything in SQLite. you can query it later.</p>
-  
   <h3>sqlite trace storage</h3>
   <p>every call gets logged to a local SQLite database. timestamp, tool name, arguments, response, latency. structured. queryable. not a log file you grep. a database you query.</p>
-  
   <h3>metadata-only by default</h3>
   <p>observer stores tool names, argument schemas, and timing by default. not the actual payload data. your secrets stay in the server. the metadata is enough to know what happened.</p>
-  
   <h3>raw payload opt-in</h3>
   <p>want the full request and response bodies? turn it on. off by default because most people don't need it and it's a lot of data. you decide.</p>
-  
   <h3>redaction patterns</h3>
   <p>regex patterns to strip sensitive data before logging. api keys, tokens, passwords. define what to redact. observer redacts it. the log stays clean.</p>
-  
   <h3>session isolation</h3>
   <p>each agent session gets its own trace namespace. you can see what one session did without filtering through noise from others.</p>
-  
-  <h3>input/output hashing</h3>
-  <p>hash the payloads for deduplication. same call twice, same hash. you can see patterns without storing the full data.</p>
-  
   <h3>transparent proxy</h3>
   <p>observer doesn't modify calls. it copies them. the agent and the server don't know it's there. zero behavior change. just visibility.</p>
-  
-  <h3>zero overhead</h3>
-  <p>metadata-only mode adds microseconds. you won't notice it. your agent won't notice it. the only difference is you can see what happened.</p>
 </section>
-
 <section>
   <h2>it looks like this</h2>
   <div class="code-block">
 <span class="comment"># start observer</span>
 <span class="install-cmd">observer --proxy-command 'npx userelay'</span>
-
 <span class="comment"># your agent connects to observer</span>
 <span class="comment"># observer forwards to relay</span>
 <span class="comment"># every call is logged to SQLite</span>
-<span class="comment"># query it later</span>
-<span class="comment"># that's it</span>
   </div>
 </section>
-
-<section>
-  <h2>why</h2>
-  <p>you connected 5 MCP servers to your agent. something went wrong. the agent called a tool you didn't expect. or it passed arguments you didn't authorize. or it read a file it shouldn't have. you have no idea because there's no log. there's no trace. there's no record. observer is the record.</p>
-</section>
-
 <div class="cta">
   <p>one binary. no signup. no pricing tiers. no enterprise plan.</p>
   <p>if you're still reading this, you already know.</p>
@@ -118,10 +102,20 @@ section p { color: #999; margin-bottom: 12px; }
     <a href="https://valtors.github.io/valtors-landing/">valtors</a>
   </div>
 </div>
-
 <div class="footer">
   <p>MIT. open source. no analytics on this page.</p>
 </div>
-
+<script>
+(function(){function ThinkingOrb(c,s,o){o=o||{};var sz=o.size||140,sp=o.speed||1,col=o.color||[168,85,247];var ctx=c.getContext("2d"),dpr=Math.min(2,window.devicePixelRatio||1);c.width=sz*dpr;c.height=sz*dpr;c.style.width=sz+"px";c.style.height=sz+"px";function rand(n,s){var x=Math.sin(n*12.9898+s*78.233)*43758.5453;return x-Math.floor(x);}function rot(cx,cy,sx,sy,sc){var co=Math.cos(cy),si=Math.sin(cy),ca=Math.cos(cx),sa=Math.sin(cx);return function(x,y,z){var u=x*ca+z*sa,w=-x*sa+z*ca,v=y*co-w*si,t=y*si+w*co;return[sx+u*sc,sy-v*sc,t];};}function sm(n,p){return Math.pow(n/300,p||0.6);}
+function drawDots(d){d.sort(function(a,b){return a.z-b.z;});for(var i=0;i<d.length;i++){var v=d[i],al=v.a!=null?v.a:1;if(al<0.02)continue;var w=Math.min(1,Math.max(0,v.white)),b=(1-w),r=Math.round(col[0]*b+255*w*0.3),g=Math.round(col[1]*b+255*w*0.3),bl=Math.round(col[2]*b+255*w*0.3);ctx.fillStyle="rgba("+r+","+g+","+bl+","+al+")";ctx.beginPath();ctx.arc(v.x,v.y,Math.max(0.5,v.r),0,Math.PI*2);ctx.fill();}}
+function orbits(n,t){var h=n/2,sc=n/2*0.82,r=rot(t*0.12,0.3,h,h,1),m=sm(n),d=[];for(var b=0;b<12;b++){var r1=rand(b,1.7),r2=rand(b,5.2),r3=rand(b,8.9),rad=sc*(0.45+0.52*r1),az=r1*2*Math.PI,inc=Math.acos(2*r2-1),sx=Math.sin(inc)*Math.cos(az),sy=Math.cos(inc),sz=Math.sin(inc)*Math.sin(az),px=-sy,py=sx,pz=0,len=Math.max(1e-6,Math.sqrt(px*px+py*py));px/=len;py/=len;var qx=-sz*py,qy=sz*px,qz=sx*py,spd=(0.25+0.55*r3)*(r3>0.5?1:-1);for(var c=0;c<40;c++){var a=c/40*2*Math.PI,p=r((px*Math.cos(a)+qx*Math.sin(a))*rad,(py*Math.cos(a)+qy*Math.sin(a))*rad,(pz*Math.cos(a)+qz*Math.sin(a))*rad),dp=(p[2]/rad+1)/2;d.push({x:p[0],y:p[1],z:p[2],r:1.2*m,white:0.72,a:0.5*(0.3+0.7*dp)});}for(var c2=0;c2<3;c2++){var a2=t*spd+c2/3*2*Math.PI+r2*6,p2=r((px*Math.cos(a2)+qx*Math.sin(a2))*rad,(py*Math.cos(a2)+qy*Math.sin(a2))*rad,(pz*Math.cos(a2)+qz*Math.sin(a2))*rad),dp2=(p2[2]/rad+1)/2;d.push({x:p2[0],y:p2[1],z:p2[2],r:(1.5+2*dp2)*m,white:0.25-0.2*dp2});}}drawDots(d);}
+function globe(n,t){var h=n/2,sc=n/2*0.82,tilt=0.4+0.06*Math.sin(t*0.35),r=rot(t*0.5,tilt,h,h,sc),m=sm(n),sa=t*(0.5+4.08),d=[];for(var lat=0;lat<=17;lat++){var phi=-Math.PI/2+lat/17*Math.PI,cp=Math.cos(phi),sp=Math.sin(phi),k=Math.max(1,Math.round(Math.abs(cp)*44));for(var lon=0;lon<k;lon++){var th=lon/k*2*Math.PI,p=r(cp*Math.cos(th),sp,cp*Math.sin(th)),dp=(p[2]+1)/2,scn=Math.atan2(Math.sin(th+t*0.5-sa),Math.cos(th+t*0.5-sa)),si=Math.exp(-(scn*scn)/0.18)*Math.max(0,p[2]);d.push({x:p[0],y:p[1],z:p[2],r:(0.8+2*dp+1.5*si)*m,white:0.62-0.54*dp,a:0.4+0.6*Math.min(1,si)});}}drawDots(d);}
+var modes={working:orbits,searching:globe,listening:orbits,solving:globe},mode=modes[s]||globe,run=false,raf=0,vis=true;function frame(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,sz,sz);mode(sz,performance.now()/1000*sp);if(run)raf=requestAnimationFrame(frame);}function start(){if(run||!vis)return;run=true;raf=requestAnimationFrame(frame);}function stop(){run=false;cancelAnimationFrame(raf);}if("IntersectionObserver" in window){var io=new IntersectionObserver(function(e){vis=e[0].isIntersecting;if(vis&&document.visibilityState!=="hidden")start();else stop();});io.observe(c);}document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")stop();else if(vis)start();});start();}window.ThinkingOrb=ThinkingOrb;})();
+new ThinkingOrb(document.getElementById("heroOrb"), "searching", { size: 140, speed: 2.015, color: [168, 85, 247] });
+</script>
+<script>
+(function(){var g=document.getElementById("prismGrid"),bs=50,colors=["rgba(168,85,247,0.3)","rgba(34,197,94,0.3)","rgba(0,173,216,0.3)","rgba(239,68,68,0.3)","rgba(99,102,241,0.3)"],lit=null;function build(){var w=window.innerWidth,h=Math.max(window.innerHeight,document.body.scrollHeight),c=Math.ceil(w/bs),r=Math.ceil(h/bs);g.innerHTML="";var p=document.createElement("div");p.className="grid-plane";p.style.width=(c*bs)+"px";p.style.height=(r*bs)+"px";for(var i=0;i<r;i++){var row=document.createElement("div");row.className="grid-row";for(var j=0;j<c;j++){var cell=document.createElement("div");cell.className="grid-cell";cell.style.width=bs+"px";cell.style.height=bs+"px";row.appendChild(cell);}p.appendChild(row);}g.appendChild(p);}g.addEventListener("pointermove",function(e){var rect=g.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top,col=Math.floor(x/bs),row=Math.floor(y/bs);if(col<0||row<0)return;if(lit&&lit.row===row&&lit.col===col)return;if(lit){lit.el.style.opacity="0";lit.el.style.transform="scale(0.5)";var o=lit;setTimeout(function(){if(o.el.parentNode)o.el.parentNode.removeChild(o.el);},1200);}var el=document.createElement("div");el.className="lit-cell";el.style.cssText="left:"+(col*bs)+"px;top:"+(row*bs)+"px;width:"+bs+"px;height:"+bs+"px;background:"+colors[Math.floor(Math.random()*colors.length)]+";opacity:1;transform:scale(1)";g.appendChild(el);lit={row:row,col:col,el:el};});g.addEventListener("pointerleave",function(){if(lit){lit.el.style.opacity="0";lit.el.style.transform="scale(0.5)";var o=lit;setTimeout(function(){if(o.el.parentNode)o.el.parentNode.removeChild(o.el);},1200);lit=null;}});build();var rt;window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(build,200);});})();</script>
+<script>
+(function(){var fx=document.getElementById("clickFx"),colors=["#a855f7","#22c55e","#00add8"];document.addEventListener("click",function(e){var x=e.clientX,y=e.clientY,color=colors[Math.floor(Math.random()*colors.length)],sz=100,sw=3,g=document.createElement("div");g.style.cssText="position:absolute;left:"+(x-sz/2)+"px;top:"+(y-sz/2)+"px;width:"+sz+"px;height:"+sz+"px";for(var a=0;a<12;a++){var angle=a*Math.PI/6,dot=document.createElement("div");dot.style.cssText="position:absolute;left:"+(sz/2-sw/2)+"px;top:"+(sz/2-sw/2)+"px;width:"+sw+"px;height:"+sw+"px;background:"+color+";border-radius:50%;transform:translate(0,0);transition:transform 0.4s cubic-bezier(0.2,0.8,0.2,1),opacity 0.5s ease-out 0.2s,width 0.5s ease-out 0.2s,height 0.5s ease-out 0.2s";g.appendChild(dot);(function(d,ang){setTimeout(function(){d.style.transform="translate("+Math.cos(ang)*sz*0.45+"px,"+Math.sin(ang)*sz*0.45+"px)";d.style.opacity="0";d.style.width="0px";d.style.height="0px";},10);})(dot,angle);}var ring=document.createElement("div");ring.style.cssText="position:absolute;left:"+(sz/2-20)+"px;top:"+(sz/2-20)+"px;width:40px;height:40px;border:2px solid "+color+";border-radius:50%;opacity:0.8;transform:scale(0.3);transition:transform 0.4s cubic-bezier(0.2,0.8,0.2,1),opacity 0.4s ease-out";g.appendChild(ring);setTimeout(function(){ring.style.transform="scale(2.5)";ring.style.opacity="0";},10);fx.appendChild(g);setTimeout(function(){if(g.parentNode)g.parentNode.removeChild(g);},700);});})();</script>
 </body>
 </html>
