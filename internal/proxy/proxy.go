@@ -26,7 +26,6 @@ type Proxy struct {
 	stderr    io.ReadCloser
 	sessionID string
 	mu        sync.Mutex
-	nextID    int
 	toolCache map[string]ToolDef
 }
 
@@ -228,10 +227,7 @@ func (p *Proxy) handleToolCall(w *bufio.Writer, req *JSONRPCRequest, scanner *bu
 	resp := p.sendToTarget(req)
 	duration := time.Since(start).Milliseconds()
 
-	isError := false
-	if resp.Error != nil {
-		isError = true
-	}
+	isError := resp.Error != nil
 
 	inputStr := string(params.Arguments)
 	outputStr := string(resp.Result)
