@@ -156,12 +156,12 @@ func GetCallByID(db *sql.DB, id int64) (*ToolCall, error) {
 }
 
 type Stats struct {
-	TotalCalls     int            `json:"total_calls"`
-	UniqueTools    int            `json:"unique_tools"`
-	ErrorCount     int            `json:"error_count"`
-	AvgDurationMs  float64        `json:"avg_duration_ms"`
-	TotalDurationMs int64         `json:"total_duration_ms"`
-	ToolBreakdown  []ToolStat     `json:"tool_breakdown"`
+	TotalCalls      int        `json:"total_calls"`
+	UniqueTools     int        `json:"unique_tools"`
+	ErrorCount      int        `json:"error_count"`
+	AvgDurationMs   float64    `json:"avg_duration_ms"`
+	TotalDurationMs int64      `json:"total_duration_ms"`
+	ToolBreakdown   []ToolStat `json:"tool_breakdown"`
 }
 
 type ToolStat struct {

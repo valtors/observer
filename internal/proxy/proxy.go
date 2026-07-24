@@ -18,16 +18,16 @@ import (
 )
 
 type Proxy struct {
-	config     *Config
-	db         *sql.DB
-	cmd        *exec.Cmd
-	stdin      io.WriteCloser
-	stdout     io.ReadCloser
-	stderr     io.ReadCloser
-	sessionID  string
-	mu         sync.Mutex
-	nextID     int
-	toolCache  map[string]ToolDef
+	config    *Config
+	db        *sql.DB
+	cmd       *exec.Cmd
+	stdin     io.WriteCloser
+	stdout    io.ReadCloser
+	stderr    io.ReadCloser
+	sessionID string
+	mu        sync.Mutex
+	nextID    int
+	toolCache map[string]ToolDef
 }
 
 type ToolDef struct {

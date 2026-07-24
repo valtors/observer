@@ -7,12 +7,12 @@ import (
 )
 
 type Config struct {
-	Target        string
-	DBPath        string
-	LogLevel      string
-	MaxTools      int
-	Filter        []string
-	RawPayload    bool
+	Target         string
+	DBPath         string
+	LogLevel       string
+	MaxTools       int
+	Filter         []string
+	RawPayload     bool
 	RedactPatterns []string
 	ListenAddr     string
 }
