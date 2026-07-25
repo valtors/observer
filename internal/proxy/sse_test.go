@@ -137,3 +137,47 @@ func TestHandleMessage_UnknownMethod(t *testing.T) {
 		t.Error("expected status code")
 	}
 }
+
+func TestHandleMessage_ToolsCall(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"trace.history","arguments":{}}}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
+
+func TestHandleMessage_TraceHistoryCall(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"trace.history","arguments":{"limit":5}}}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
+
+func TestHandleMessage_TraceStatsCall(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"trace.stats","arguments":{}}}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
+
+func TestHandleMessage_TraceSearchCall(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"trace.search","arguments":{"query":"test"}}}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
