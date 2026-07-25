@@ -225,3 +225,29 @@ func TestHandleMessage_CompletionsComplete(t *testing.T) {
 		t.Error("expected status code")
 	}
 }
+
+func TestPipeStderr(t *testing.T) {
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatalf("setupDB: %v", err)
+	}
+	defer db.Close()
+
+	p, err := New(&Config{Target: "echo"}, db)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	defer p.cmd.Process.Kill()
+
+	done := make(chan struct{})
+	go func() {
+		p.pipeStderr()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Error("pipeStderr did not finish")
+	}
+}
