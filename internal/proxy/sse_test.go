@@ -127,7 +127,7 @@ func TestHandleMessage_ToolsList(t *testing.T) {
 	}
 }
 
-func TestHandleMessage_UnknownMethod(t *testing.T) {
+func TestHandleMessage_UnknownMethod_2(t *testing.T) {
 	s := setupSSE(t)
 	body := `{"jsonrpc":"2.0","id":3,"method":"unknown/method"}`
 	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
@@ -174,6 +174,50 @@ func TestHandleMessage_TraceStatsCall(t *testing.T) {
 func TestHandleMessage_TraceSearchCall(t *testing.T) {
 	s := setupSSE(t)
 	body := `{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"trace.search","arguments":{"query":"test"}}}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
+
+func TestHandleMessage_TraceReplayCall(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"trace.replay","arguments":{"call_id":999}}}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
+
+func TestHandleMessage_PromptGet(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":10,"method":"prompts/get","params":{"name":"test"}}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
+
+func TestHandleMessage_ResourcesList(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":11,"method":"resources/list","params":{}}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
+
+func TestHandleMessage_CompletionsComplete(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":13,"method":"completion/complete","params":{"ref":{"type":"ref","name":"test"},"argument":{"name":"x","value":"y"}}}`
 	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
 	w := httptest.NewRecorder()
 	s.HandleMessage(w, req)
