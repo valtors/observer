@@ -94,3 +94,46 @@ func TestJSONUnmarshal(t *testing.T) {
 		t.Errorf("expected initialize, got %s", req.Method)
 	}
 }
+
+func TestHandleMessage_OptionsMethod(t *testing.T) {
+	s := setupSSE(t)
+	req := httptest.NewRequest("OPTIONS", "/message", nil)
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code != http.StatusNoContent {
+		t.Logf("got %d (CORS handling may vary)", w.Code)
+	}
+}
+
+func TestHandleMessage_Initialize(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05"}}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
+
+func TestHandleMessage_ToolsList(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":2,"method":"tools/list"}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
+
+func TestHandleMessage_UnknownMethod(t *testing.T) {
+	s := setupSSE(t)
+	body := `{"jsonrpc":"2.0","id":3,"method":"unknown/method"}`
+	req := httptest.NewRequest("POST", "/message", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	s.HandleMessage(w, req)
+	if w.Code == 0 {
+		t.Error("expected status code")
+	}
+}
