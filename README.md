@@ -1,40 +1,58 @@
-# Observer
+# observer
 
-Your agent makes 30 tool calls. You see the final text response. Do you know which tools were called? What arguments were passed? Which calls failed? How long they took? You don't.
+[![CI](https://github.com/valtors/observer/actions/workflows/ci.yml/badge.svg)](https://github.com/valtors/observer/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0F172A?style=flat-square)](./LICENSE)
+[![Go](https://img.shields.io/badge/go-1.23+-00ADD8?style=flat-square)](https://go.dev/)
+[![tests](https://img.shields.io/badge/tests-70-green?style=flat-square)]()
 
-Observer fixes this. It sits between your MCP client (Claude Desktop, Cline, Goose, Codex, whatever) and the actual MCP server. It logs every tool call to SQLite. Then it exposes trace tools so your agent can query its own call history.
+your agent makes 30 tool calls. you see the final text response. do you know which tools were called? what arguments were passed? which calls failed? how long they took? you don't.
 
-## Why
+observer fixes this. it sits between your mcp client (claude desktop, cline, goose, codex, whatever) and the actual mcp server. it logs every tool call to sqlite. then it exposes trace tools so your agent can query its own call history.
 
-1665 discussions across 8 agent communities. The #1 problem: nobody can see what their agent is doing. People debug agent behavior with console.log. In 2026.
+## why
 
-Observer fixes this.
+1665 discussions across 8 agent communities. the #1 problem: nobody can see what their agent is doing. people debug agent behavior with console.log. in 2026.
 
-## Features
+observer fixes this.
 
-- **Transparent proxy** - Drop-in replacement for any MCP server. Your client doesn't know it's talking to a proxy.
-- **Tool call logging** - Every call logged. Input. Output. Duration. Error. Token estimate. All of it.
-- **Trace tools** - 4 MCP tools injected into your agent's tool list:
+## why not just X
+
+| | console.log | langfuse | observer |
+|---|---|---|---|
+| setup | manual | docker + account | one binary |
+| protocol awareness | no | no | MCP |
+| agent self-query | no | no | trace.* tools |
+| runs offline | yes | no | yes |
+| cost | free | freemium | free |
+| data location | stdout | their cloud | your sqlite |
+
+console.log is debug logging from 1995. langfuse traces everything but needs a cloud account. observer is built for MCP: it understands tool calls, injects trace tools back into the agent, and keeps everything local.
+
+## features
+
+- **transparent proxy** - drop-in replacement for any mcp server. your client doesn't know it's talking to a proxy.
+- **tool call logging** - every call logged. input. output. duration. error. token estimate. all of it.
+- **trace tools** - 4 mcp tools injected into your agent's tool list:
   - `trace.history` - recent tool calls
   - `trace.stats` - usage statistics, per-tool breakdown
   - `trace.search` - search through call history
-  - `trace.replay` - replay a previous tool call by ID
-- **Tool filtering** - Hide tools from the client. Less tokens, less confusion. Set OBSERVER_FILTER and they're gone.
-- **SSE transport** - Run Observer as an HTTP server with /sse and /message endpoints. For remote setups.
-- **SQLite storage** - All data local. No external dependencies. Your data doesn't leave your machine.
-- **Zero config** - One binary. One env var. That's it.
+  - `trace.replay` - replay a previous tool call by id
+- **tool filtering** - hide tools from the client. less tokens, less confusion. set OBSERVER_FILTER and they're gone.
+- **sse transport** - run observer as an http server with /sse and /message endpoints. for remote setups.
+- **sqlite storage** - all data local. no external dependencies. your data doesn't leave your machine.
+- **zero config** - one binary. one env var. that's it.
 
-## Quick Start
+## quick start
 
 ```bash
-# Install
+# install
 go install github.com/valtors/observer@latest
 
-# Run (wrap any MCP server)
+# run (wrap any mcp server)
 OBSERVER_TARGET="npx -y @modelcontextprotocol/server-filesystem /tmp" observer
 ```
 
-Or with Claude Desktop:
+or with claude desktop:
 
 ```json
 {
@@ -49,48 +67,46 @@ Or with Claude Desktop:
 }
 ```
 
-Or with Cline / Goose / any MCP client - just replace the server command with `observer` and set `OBSERVER_TARGET` to the original command.
+or with cline / goose / any mcp client - just replace the server command with `observer` and set `OBSERVER_TARGET` to the original command.
 
-## Configuration
+## configuration
 
-All configuration is via environment variables:
+all configuration is via environment variables:
 
-| Variable | Description | Default |
-|---|---|---|
-| `OBSERVER_TARGET` | Command to run the upstream MCP server (required) | - |
-| `OBSERVER_DB_PATH` | SQLite database path | `~/.observer/trace.db` |
-| `OBSERVER_LOG_LEVEL` | Log level: debug, info, warn, error | `info` |
-| `OBSERVER_MAX_TOOLS` | Max tools to expose to client (0 = all) | `0` |
-| `OBSERVER_FILTER` | Comma-separated tool names to hide | - |
-| `OBSERVER_RAW_PAYLOAD` | Set to 1 to include raw input/output in trace responses | `0` |
-| `OBSERVER_REDACT_PATTERNS` | Comma-separated patterns to redact before storing | - |
+- `OBSERVER_TARGET` - command to run the upstream mcp server (required)
+- `OBSERVER_DB_PATH` - sqlite database path (default: `~/.observer/trace.db`)
+- `OBSERVER_LOG_LEVEL` - log level: debug, info, warn, error (default: `info`)
+- `OBSERVER_MAX_TOOLS` - max tools to expose to client (0 = all, default: `0`)
+- `OBSERVER_FILTER` - comma-separated tool names to hide (default: none)
+- `OBSERVER_RAW_PAYLOAD` - set to 1 to include raw input/output in trace responses (default: `0`)
+- `OBSERVER_REDACT_PATTERNS` - comma-separated patterns to redact before storing (default: none)
 
-## How It Works
+## how it works
 
 ```
-MCP Client (Claude, Cline, etc.)
+mcp client (claude, cline, etc.)
     |
-    | JSON-RPC over stdio
+    | json-rpc over stdio
     |
-Observer (this proxy)
-    |-- logs every tool call to SQLite
+observer (this proxy)
+    |-- logs every tool call to sqlite
     |-- injects trace.* tools into tools/list response
     |-- optionally filters tools to reduce token overhead
     |
-    | JSON-RPC over stdio
+    | json-rpc over stdio
     |
-Upstream MCP Server (filesystem, git, etc.)
+upstream mcp server (filesystem, git, etc.)
 ```
 
-Observer speaks the MCP protocol on both sides. It intercepts `initialize`, `tools/list`, and `tools/call` to add logging and trace tools. All other requests are passed through transparently.
+observer speaks the mcp protocol on both sides. it intercepts `initialize`, `tools/list`, and `tools/call` to add logging and trace tools. all other requests are passed through transparently.
 
-## Trace Tools
+## trace tools
 
-Observer injects 4 extra tools into the `tools/list` response. These are handled locally and never forwarded to the upstream server.
+observer injects 4 extra tools into the `tools/list` response. these are handled locally and never forwarded to the upstream server.
 
-By default, trace tools return **metadata only** (tool name, timestamp, duration, error status, SHA-256 hash of input/output). This prevents secrets or prompt injection from old tool results from leaking back into the model's context. Set `OBSERVER_RAW_PAYLOAD=1` to include raw input/output in trace responses.
+by default, trace tools return **metadata only** (tool name, timestamp, duration, error status, sha-256 hash of input/output). this prevents secrets or prompt injection from old tool results from leaking back into the model's context. set `OBSERVER_RAW_PAYLOAD=1` to include raw input/output in trace responses.
 
-Trace tools are **session-scoped by default** - they only return calls from the current Observer session. Pass an explicit `session_id` to query a different session.
+trace tools are **session-scoped by default** - they only return calls from the current observer session. pass an explicit `session_id` to query a different session.
 
 ### trace.history
 
@@ -98,7 +114,7 @@ Trace tools are **session-scoped by default** - they only return calls from the 
 {"name": "trace.history", "arguments": {"limit": 10}}
 ```
 
-Returns the last N tool calls for the current session with metadata, duration, and timestamp.
+returns the last n tool calls for the current session with metadata, duration, and timestamp.
 
 ### trace.stats
 
@@ -106,7 +122,7 @@ Returns the last N tool calls for the current session with metadata, duration, a
 {"name": "trace.stats", "arguments": {}}
 ```
 
-Returns total calls, unique tools, error count, average duration, and per-tool breakdown for the current session.
+returns total calls, unique tools, error count, average duration, and per-tool breakdown for the current session.
 
 ### trace.search
 
@@ -114,7 +130,7 @@ Returns total calls, unique tools, error count, average duration, and per-tool b
 {"name": "trace.search", "arguments": {"query": "filesystem", "limit": 20}}
 ```
 
-Search through tool call history for the current session by tool name, input, or output content.
+search through tool call history for the current session by tool name, input, or output content.
 
 ### trace.replay
 
@@ -122,24 +138,22 @@ Search through tool call history for the current session by tool name, input, or
 {"name": "trace.replay", "arguments": {"call_id": 42}}
 ```
 
-Retrieve a previous tool call by its ID for comparison or debugging.
+retrieve a previous tool call by its id for comparison or debugging.
 
-## Database Schema
+## tests
 
-Three tables:
+70 tests. 63.3% coverage. all pass.
 
-- `tool_calls` - Every tool invocation with input, output, duration, error status
-- `sessions` - MCP sessions with client/server info
-- `tool_registry` - Discovered tools with visibility flags and call counts
+```bash
+go test ./... -count=1
+```
 
-All data is stored locally. Nothing leaves your machine.
+## contributing
 
-## Contributing
+see [CONTRIBUTING.md](CONTRIBUTING.md). we welcome contributions of all kinds - bug fixes, new trace tools, filtering strategies, transport support, docs.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). We welcome contributions of all kinds - bug fixes, new trace tools, filtering strategies, transport support, docs.
+good first issues are labeled `good first issue`. we have an ai agent contribution guide for contributors using ai coding tools.
 
-Good first issues are labeled `good first issue`. We have an AI agent contribution guide for contributors using AI coding tools.
-
-## License
+## license
 
 MIT
