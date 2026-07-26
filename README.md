@@ -9,6 +9,8 @@ your agent makes 30 tool calls. you see the final text response. do you know whi
 
 observer fixes this. it sits between your mcp client (claude desktop, cline, goose, codex, whatever) and the actual mcp server. it logs every tool call to sqlite. then it exposes trace tools so your agent can query its own call history.
 
+[landing](https://valtors.github.io/observer/) - [github](https://github.com/valtors/observer)
+
 ## why
 
 1665 discussions across 8 agent communities. the #1 problem: nobody can see what their agent is doing. people debug agent behavior with console.log. in 2026.
