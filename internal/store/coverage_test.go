@@ -30,21 +30,21 @@ func TestGetStats_WithErrors(t *testing.T) {
 	db := setupTestDB(t)
 	for i := 0; i < 5; i++ {
 		call := &ToolCall{
-			SessionID:   "s1",
-			ToolName:    "read",
-			Input:       "{}",
-			Output:      "{}",
-			DurationMs:  int64(i * 10),
+			SessionID:  "s1",
+			ToolName:   "read",
+			Input:      "{}",
+			Output:     "{}",
+			DurationMs: int64(i * 10),
 		}
 		InsertToolCall(db, call)
 	}
 	call := &ToolCall{
-		SessionID:   "s1",
-		ToolName:    "write",
-		Input:       "{}",
-		Output:      "disk full",
-		DurationMs:  50,
-		IsError:     true,
+		SessionID:  "s1",
+		ToolName:   "write",
+		Input:      "{}",
+		Output:     "disk full",
+		DurationMs: 50,
+		IsError:    true,
 	}
 	InsertToolCall(db, call)
 	stats, err := GetStats(db, "")
@@ -62,19 +62,19 @@ func TestGetStats_WithErrors(t *testing.T) {
 func TestGetStats_FilterBySession(t *testing.T) {
 	db := setupTestDB(t)
 	call := &ToolCall{
-		SessionID:   "s1",
-		ToolName:    "read",
-		Input:       "{}",
-		Output:      "{}",
-		DurationMs:  10,
+		SessionID:  "s1",
+		ToolName:   "read",
+		Input:      "{}",
+		Output:     "{}",
+		DurationMs: 10,
 	}
 	InsertToolCall(db, call)
 	call2 := &ToolCall{
-		SessionID:   "s2",
-		ToolName:    "write",
-		Input:       "{}",
-		Output:      "{}",
-		DurationMs:  20,
+		SessionID:  "s2",
+		ToolName:   "write",
+		Input:      "{}",
+		Output:     "{}",
+		DurationMs: 20,
 	}
 	InsertToolCall(db, call2)
 	stats, err := GetStats(db, "s1")

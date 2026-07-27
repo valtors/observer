@@ -83,10 +83,10 @@ func TestTraceReplay_NotFound(t *testing.T) {
 func TestTraceReplay_Found(t *testing.T) {
 	p := setupTestProxy(t)
 	call := &store.ToolCall{
-		SessionID: "test-session",
-		ToolName:  "read_file",
-		Input:     `{"path":"/tmp/test.txt"}`,
-		Output:    `{"content":"hello"}`,
+		SessionID:  "test-session",
+		ToolName:   "read_file",
+		Input:      `{"path":"/tmp/test.txt"}`,
+		Output:     `{"content":"hello"}`,
 		DurationMs: 15,
 	}
 	err := store.InsertToolCall(p.db, call)
@@ -108,10 +108,10 @@ func TestTraceReplay_RawPayload(t *testing.T) {
 	p := setupTestProxy(t)
 	p.config.RawPayload = true
 	call := &store.ToolCall{
-		SessionID: "test-session",
-		ToolName:  "read_file",
-		Input:     `{"path":"/tmp/test.txt"}`,
-		Output:    `{"content":"hello"}`,
+		SessionID:  "test-session",
+		ToolName:   "read_file",
+		Input:      `{"path":"/tmp/test.txt"}`,
+		Output:     `{"content":"hello"}`,
 		DurationMs: 15,
 	}
 	err := store.InsertToolCall(p.db, call)
@@ -133,10 +133,10 @@ func TestTraceHistory_DefaultLimit(t *testing.T) {
 	p := setupTestProxy(t)
 	for i := 0; i < 5; i++ {
 		call := &store.ToolCall{
-			SessionID: "test-session",
-			ToolName:  "read_file",
-			Input:     "{}",
-			Output:    "{}",
+			SessionID:  "test-session",
+			ToolName:   "read_file",
+			Input:      "{}",
+			Output:     "{}",
 			DurationMs: int64(i),
 		}
 		store.InsertToolCall(p.db, call)
@@ -156,21 +156,21 @@ func TestTraceStats_WithData(t *testing.T) {
 	p := setupTestProxy(t)
 	for i := 0; i < 3; i++ {
 		call := &store.ToolCall{
-			SessionID: "test-session",
-			ToolName:  "read_file",
-			Input:     "{}",
-			Output:    "{}",
+			SessionID:  "test-session",
+			ToolName:   "read_file",
+			Input:      "{}",
+			Output:     "{}",
 			DurationMs: 10,
 		}
 		store.InsertToolCall(p.db, call)
 	}
 	call := &store.ToolCall{
-		SessionID: "test-session",
-		ToolName:  "write_file",
-		Input:     "{}",
-		Output:    "permission denied",
+		SessionID:  "test-session",
+		ToolName:   "write_file",
+		Input:      "{}",
+		Output:     "permission denied",
 		DurationMs: 20,
-		IsError:   true,
+		IsError:    true,
 	}
 	store.InsertToolCall(p.db, call)
 
@@ -191,10 +191,10 @@ func TestTraceStats_WithData(t *testing.T) {
 func TestTraceSearch_WithQuery(t *testing.T) {
 	p := setupTestProxy(t)
 	call := &store.ToolCall{
-		SessionID: "test-session",
-		ToolName:  "search_files",
-		Input:     `{"pattern":"*.go"}`,
-		Output:    `{"results":["main.go"]}`,
+		SessionID:  "test-session",
+		ToolName:   "search_files",
+		Input:      `{"pattern":"*.go"}`,
+		Output:     `{"results":["main.go"]}`,
 		DurationMs: 5,
 	}
 	store.InsertToolCall(p.db, call)
@@ -235,7 +235,6 @@ func TestHandleTraceTool_Dispatch(t *testing.T) {
 	}
 }
 
-
 func TestMakeToolResult(t *testing.T) {
 	resp := makeToolResult(json.RawMessage("1"), "hello world")
 	if resp.JSONRPC != "2.0" {
@@ -261,11 +260,11 @@ func TestTraceReplayHTTP_NotFound(t *testing.T) {
 func TestTraceReplayHTTP_Found(t *testing.T) {
 	p := setupTestProxy(t)
 	call := &store.ToolCall{
-		SessionID:   "test-session",
-		ToolName:    "read_file",
-		Input:       `{"path":"/tmp"}`,
-		Output:      `{"content":"hi"}`,
-		DurationMs:  10,
+		SessionID:  "test-session",
+		ToolName:   "read_file",
+		Input:      `{"path":"/tmp"}`,
+		Output:     `{"content":"hi"}`,
+		DurationMs: 10,
 	}
 	store.InsertToolCall(p.db, call)
 	resp := p.traceReplayHTTP(&JSONRPCRequest{JSONRPC: "2.0", ID: json.RawMessage("1")}, json.RawMessage(`{"call_id":1}`))
@@ -281,11 +280,11 @@ func TestTraceHistoryHTTP_WithData(t *testing.T) {
 	p := setupTestProxy(t)
 	for i := 0; i < 3; i++ {
 		store.InsertToolCall(p.db, &store.ToolCall{
-			SessionID:   "test-session",
-			ToolName:    "read_file",
-			Input:       "{}",
-			Output:      "{}",
-			DurationMs:  int64(i),
+			SessionID:  "test-session",
+			ToolName:   "read_file",
+			Input:      "{}",
+			Output:     "{}",
+			DurationMs: int64(i),
 		})
 	}
 	resp := p.traceHistoryHTTP(&JSONRPCRequest{JSONRPC: "2.0", ID: json.RawMessage("1")}, json.RawMessage(`{}`))
@@ -300,11 +299,11 @@ func TestTraceHistoryHTTP_WithData(t *testing.T) {
 func TestTraceSearchHTTP_WithQuery(t *testing.T) {
 	p := setupTestProxy(t)
 	store.InsertToolCall(p.db, &store.ToolCall{
-		SessionID:   "test-session",
-		ToolName:    "search_files",
-		Input:       `{"pattern":"*.go"}`,
-		Output:      `{"results":["main.go"]}`,
-		DurationMs:  5,
+		SessionID:  "test-session",
+		ToolName:   "search_files",
+		Input:      `{"pattern":"*.go"}`,
+		Output:     `{"results":["main.go"]}`,
+		DurationMs: 5,
 	})
 	resp := p.traceSearchHTTP(&JSONRPCRequest{JSONRPC: "2.0", ID: json.RawMessage("1")}, json.RawMessage(`{"query":"search"}`))
 	if resp.Error != nil {
@@ -318,11 +317,11 @@ func TestTraceSearchHTTP_WithQuery(t *testing.T) {
 func TestTraceStatsHTTP_WithData(t *testing.T) {
 	p := setupTestProxy(t)
 	store.InsertToolCall(p.db, &store.ToolCall{
-		SessionID:   "test-session",
-		ToolName:    "read_file",
-		Input:       "{}",
-		Output:      "{}",
-		DurationMs:  10,
+		SessionID:  "test-session",
+		ToolName:   "read_file",
+		Input:      "{}",
+		Output:     "{}",
+		DurationMs: 10,
 	})
 	resp := p.traceStatsHTTP(&JSONRPCRequest{JSONRPC: "2.0", ID: json.RawMessage("1")}, json.RawMessage(`{}`))
 	if resp.Error != nil {
