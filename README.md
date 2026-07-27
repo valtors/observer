@@ -3,7 +3,7 @@
 [![CI](https://github.com/valtors/observer/actions/workflows/ci.yml/badge.svg)](https://github.com/valtors/observer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0F172A?style=flat-square)](./LICENSE)
 [![Go](https://img.shields.io/badge/go-1.23+-00ADD8?style=flat-square)](https://go.dev/)
-[![tests](https://img.shields.io/badge/tests-70-green?style=flat-square)]()
+[![tests](https://img.shields.io/badge/tests-84-green?style=flat-square)]()
 
 your agent makes 30 tool calls. you see the final text response. do you know which tools were called? what arguments were passed? which calls failed? how long they took? you don't.
 
