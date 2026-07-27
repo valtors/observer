@@ -150,6 +150,10 @@ retrieve a previous tool call by its id for comparison or debugging.
 go test ./... -count=1
 ```
 
+## tech
+
+`go` `sqlite` `MCP` `single binary` `zero runtime deps` `sse transport` `stdlib`
+
 ## contributing
 
 see [CONTRIBUTING.md](CONTRIBUTING.md). we welcome contributions of all kinds - bug fixes, new trace tools, filtering strategies, transport support, docs.
