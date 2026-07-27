@@ -144,7 +144,7 @@ retrieve a previous tool call by its id for comparison or debugging.
 
 ## tests
 
-70 tests. 63.3% coverage. all pass.
+84 tests. 68.7% coverage. all pass.
 
 ```bash
 go test ./... -count=1
